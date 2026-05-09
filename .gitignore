@@ -1,4 +1,11 @@
+<<<<<<< HEAD
 # Archivos y carpetas de Visual Studio
+=======
+# Ignorar carpeta interna del proyecto
+SeguimientoDeGraduados/
+
+# Archivos de Visual Studio
+>>>>>>> 1b4e878 (blazor web server app)
 .vs/
 *.suo
 *.user
@@ -26,10 +33,18 @@ Release/
 publish/
 wwwroot/
 
+<<<<<<< HEAD
 # Archivos de paquetes NuGet
+=======
+# Paquetes NuGet
+>>>>>>> 1b4e878 (blazor web server app)
 *.nupkg
 *.snupkg
 packages/
 
+<<<<<<< HEAD
 # Archivos de dependencias
+=======
+# Dependencias Node.js
+>>>>>>> 1b4e878 (blazor web server app)
 node_modules/
