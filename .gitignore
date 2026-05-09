@@ -1,8 +1,35 @@
-# Visual Studio
+# Archivos y carpetas de Visual Studio
 .vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Carpetas de compilación
 bin/
 obj/
-layout/
-*.user
-*.suo
+Debug/
+Release/
+
+# Archivos de configuración locales
+*.local.json
+*.config
+*.cache
 *.log
+
+# Archivos temporales
+*.tmp
+*.bak
+*.swp
+
+# Archivos de publicación
+publish/
+wwwroot/
+
+# Archivos de paquetes NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# Archivos de dependencias
+node_modules/
