@@ -2,34 +2,70 @@
 @using SeguimientosDeGraduados.Models
 @using Microsoft.EntityFrameworkCore
 @inject SeguimientoGraduadosContext _context
+@using Microsoft.AspNetCore.Components.Forms
 
 <h3>Gestión de Departamentos</h3>
 
-<div class="mb-3">
-    <input placeholder="Nombre del departamento" @bind="nuevoDepartamento.NombreDepartamento" />
-    <button type="button" class="btn btn-primary" @onclick="CrearDepartamento">Agregar</button>
-</div>
+<EditForm Model="nuevoDepartamento"
+          OnValidSubmit="OnSubmit"
+          FormName="DepartamentosForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <InputText class="form-control"
+                   placeholder="Nombre del departamento"
+                   @bind-Value="nuevoDepartamento.NombreDepartamento" />
+
+        <br />
+
+        @if (!modoEdicion)
+        {
+            <button type="submit" class="btn btn-primary">
+                Agregar
+            </button>
+        }
+        else
+        {
+            <button type="submit" class="btn btn-success">
+                Guardar cambios
+            </button>
+
+            <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">
+                Cancelar
+            </button>
+        }
+    </div>
+</EditForm>
 
 @if (!string.IsNullOrEmpty(mensaje))
 {
     <div class="alert alert-info">@mensaje</div>
 }
 
-<table class="table">
+<table class="table table-striped">
     <thead>
         <tr>
+            <th>ID</th>
             <th>Nombre</th>
-            <th>Acciones</th>
+            <th style="width:200px;">Acciones</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var d in departamentos)
         {
             <tr>
+                <td>@d.IdDepartamento</td>
                 <td>@d.NombreDepartamento</td>
                 <td>
-                    <button type="button" class="btn btn-warning" @onclick="() => EditarDepartamento(d)">Editar</button>
-                    <button type="button" class="btn btn-danger" @onclick="() => EliminarDepartamento(d.IdDepartamento)">Eliminar</button>
+                    <button class="btn btn-warning btn-sm"
+                            @onclick="() => EditarDepartamento(d)">
+                        Editar
+                    </button>
+                    <button class="btn btn-danger btn-sm"
+                            @onclick="() => EliminarDepartamento(d.IdDepartamento)">
+                        Eliminar
+                    </button>
                 </td>
             </tr>
         }
@@ -39,34 +75,76 @@
 @code {
     private List<Departamento> departamentos = new();
     private Departamento nuevoDepartamento = new();
-    private string mensaje = string.Empty;
+    private string mensaje = "";
+    private bool modoEdicion = false;
 
     protected override async Task OnInitializedAsync()
     {
+        await CargarDepartamentos();
+    }
+
+    private async Task CargarDepartamentos()
+    {
         departamentos = await _context.Departamentos.ToListAsync();
     }
 
+    private async Task OnSubmit()
+    {
+        if (modoEdicion)
+            await ActualizarDepartamento();
+        else
+            await CrearDepartamento();
+    }
+     
     private async Task CrearDepartamento()
     {
-        if (!string.IsNullOrWhiteSpace(nuevoDepartamento.NombreDepartamento))
+        if (string.IsNullOrWhiteSpace(nuevoDepartamento.NombreDepartamento))
         {
-            _context.Departamentos.Add(nuevoDepartamento);
-            await _context.SaveChangesAsync();
-            departamentos = await _context.Departamentos.ToListAsync();
-            nuevoDepartamento = new(); // limpiar formulario
-            StateHasChanged(); // refrescar la UI
+            mensaje = "Debe ingresar un nombre.";
+            return;
         }
+
+        var dep = new Departamento
+        {
+            NombreDepartamento = nuevoDepartamento.NombreDepartamento
+        };
+
+        _context.Departamentos.Add(dep);
+        await _context.SaveChangesAsync();
+
+        mensaje = "Departamento creado correctamente.";
+        nuevoDepartamento = new();
+        await CargarDepartamentos();
     }
 
-
-    private async Task EditarDepartamento(Departamento d)
+    private void EditarDepartamento(Departamento d)
     {
-        d.NombreDepartamento = d.NombreDepartamento + " (editado)";
-        _context.Departamentos.Update(d);
-        await _context.SaveChangesAsync();
-        departamentos = await _context.Departamentos.ToListAsync();
-        mensaje = $"Departamento {d.IdDepartamento} editado correctamente";
-        StateHasChanged();
+        nuevoDepartamento = new Departamento
+        {
+            IdDepartamento = d.IdDepartamento,
+            NombreDepartamento = d.NombreDepartamento
+        };
+        modoEdicion = true;
+    }
+
+    private async Task ActualizarDepartamento()
+    {
+        var dep = await _context.Departamentos.FindAsync(nuevoDepartamento.IdDepartamento);
+        if (dep != null)
+        {
+            dep.NombreDepartamento = nuevoDepartamento.NombreDepartamento;
+            await _context.SaveChangesAsync();
+            mensaje = "Departamento actualizado correctamente.";
+        }
+        nuevoDepartamento = new();
+        modoEdicion = false;
+        await CargarDepartamentos();
+    }
+
+    private void CancelarEdicion()
+    {
+        nuevoDepartamento = new();
+        modoEdicion = false;
     }
 
     private async Task EliminarDepartamento(int id)
@@ -76,13 +154,8 @@
         {
             _context.Departamentos.Remove(d);
             await _context.SaveChangesAsync();
-            departamentos = await _context.Departamentos.ToListAsync();
-            mensaje = $"Departamento {id} eliminado correctamente";
-            StateHasChanged();
-        }
-        else
-        {
-            mensaje = "No se encontró el departamento a eliminar";
+            mensaje = "Departamento eliminado correctamente.";
+            await CargarDepartamentos();
         }
     }
 }

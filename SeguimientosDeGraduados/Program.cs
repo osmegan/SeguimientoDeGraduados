@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SeguimientosDeGraduados.Components;
-using SeguimientosDeGraduados.Models; // <- tu carpeta Models generada por Scaffold
+using SeguimientosDeGraduados.Models;
 
 namespace SeguimientosDeGraduados
 {
@@ -10,17 +10,16 @@ namespace SeguimientosDeGraduados
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Servicios de Blazor
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
-            // 🔹 Aquí registramos el DbContext con la cadena de conexión del appsettings.json
+            // Registrar el DbContext con la cadena de conexión
             builder.Services.AddDbContext<SeguimientoGraduadosContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("SeguimientoGraduados")));
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error");
@@ -29,7 +28,6 @@ namespace SeguimientosDeGraduados
 
             app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
             app.UseHttpsRedirection();
-
             app.UseAntiforgery();
 
             app.MapStaticAssets();
