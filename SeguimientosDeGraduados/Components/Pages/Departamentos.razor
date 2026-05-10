@@ -1,0 +1,69 @@
+﻿@page "/departamentos"
+@using SeguimientosDeGraduados.Models
+@using Microsoft.EntityFrameworkCore
+@inject SeguimientoGraduadosContext _context
+
+<h3>Gestión de Departamentos</h3>
+
+<div class="mb-3">
+    <input placeholder="Nombre del departamento" @bind="nuevoDepartamento.NombreDepartamento" />
+    <button class="btn btn-primary" @onclick="CrearDepartamento">Agregar</button>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var d in departamentos)
+        {
+            <tr>
+                <td>@d.NombreDepartamento</td>
+                <td>
+                    <button class="btn btn-warning" @onclick="() => EditarDepartamento(d)">Editar</button>
+                    <button class="btn btn-danger" @onclick="() => EliminarDepartamento(d.IdDepartamento)">Eliminar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Departamento> departamentos = new();
+    private Departamento nuevoDepartamento = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        departamentos = await _context.Departamentos.ToListAsync();
+    }
+
+    private async Task CrearDepartamento()
+    {
+        _context.Departamentos.Add(nuevoDepartamento);
+        await _context.SaveChangesAsync();
+        departamentos = await _context.Departamentos.ToListAsync();
+        nuevoDepartamento = new(); // limpiar formulario
+    }
+
+    private async Task EditarDepartamento(Departamento d)
+    {
+        d.NombreDepartamento = d.NombreDepartamento + " (editado)";
+        _context.Departamentos.Update(d);
+        await _context.SaveChangesAsync();
+        departamentos = await _context.Departamentos.ToListAsync();
+    }
+
+    private async Task EliminarDepartamento(int id)
+    {
+        var d = await _context.Departamentos.FindAsync(id);
+        if (d != null)
+        {
+            _context.Departamentos.Remove(d);
+            await _context.SaveChangesAsync();
+            departamentos = await _context.Departamentos.ToListAsync();
+        }
+    }
+}
