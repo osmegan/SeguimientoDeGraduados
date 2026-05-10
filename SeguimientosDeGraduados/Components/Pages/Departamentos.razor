@@ -7,8 +7,13 @@
 
 <div class="mb-3">
     <input placeholder="Nombre del departamento" @bind="nuevoDepartamento.NombreDepartamento" />
-    <button class="btn btn-primary" @onclick="CrearDepartamento">Agregar</button>
+    <button type="button" class="btn btn-primary" @onclick="CrearDepartamento">Agregar</button>
 </div>
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-info">@mensaje</div>
+}
 
 <table class="table">
     <thead>
@@ -23,8 +28,8 @@
             <tr>
                 <td>@d.NombreDepartamento</td>
                 <td>
-                    <button class="btn btn-warning" @onclick="() => EditarDepartamento(d)">Editar</button>
-                    <button class="btn btn-danger" @onclick="() => EliminarDepartamento(d.IdDepartamento)">Eliminar</button>
+                    <button type="button" class="btn btn-warning" @onclick="() => EditarDepartamento(d)">Editar</button>
+                    <button type="button" class="btn btn-danger" @onclick="() => EliminarDepartamento(d.IdDepartamento)">Eliminar</button>
                 </td>
             </tr>
         }
@@ -34,6 +39,7 @@
 @code {
     private List<Departamento> departamentos = new();
     private Departamento nuevoDepartamento = new();
+    private string mensaje = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -42,11 +48,16 @@
 
     private async Task CrearDepartamento()
     {
-        _context.Departamentos.Add(nuevoDepartamento);
-        await _context.SaveChangesAsync();
-        departamentos = await _context.Departamentos.ToListAsync();
-        nuevoDepartamento = new(); // limpiar formulario
+        if (!string.IsNullOrWhiteSpace(nuevoDepartamento.NombreDepartamento))
+        {
+            _context.Departamentos.Add(nuevoDepartamento);
+            await _context.SaveChangesAsync();
+            departamentos = await _context.Departamentos.ToListAsync();
+            nuevoDepartamento = new(); // limpiar formulario
+            StateHasChanged(); // refrescar la UI
+        }
     }
+
 
     private async Task EditarDepartamento(Departamento d)
     {
@@ -54,6 +65,8 @@
         _context.Departamentos.Update(d);
         await _context.SaveChangesAsync();
         departamentos = await _context.Departamentos.ToListAsync();
+        mensaje = $"Departamento {d.IdDepartamento} editado correctamente";
+        StateHasChanged();
     }
 
     private async Task EliminarDepartamento(int id)
@@ -64,6 +77,12 @@
             _context.Departamentos.Remove(d);
             await _context.SaveChangesAsync();
             departamentos = await _context.Departamentos.ToListAsync();
+            mensaje = $"Departamento {id} eliminado correctamente";
+            StateHasChanged();
+        }
+        else
+        {
+            mensaje = "No se encontró el departamento a eliminar";
         }
     }
 }
