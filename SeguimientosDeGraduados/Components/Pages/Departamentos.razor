@@ -12,6 +12,7 @@
     <DataAnnotationsValidator />
     <ValidationSummary />
 
+
     <div class="mb-3">
         <InputText class="form-control"
                    placeholder="Nombre del departamento"
@@ -21,19 +22,12 @@
 
         @if (!modoEdicion)
         {
-            <button type="submit" class="btn btn-primary">
-                Agregar
-            </button>
+            <button type="submit" class="btn btn-primary">Agregar</button>
         }
         else
         {
-            <button type="submit" class="btn btn-success">
-                Guardar cambios
-            </button>
-
-            <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">
-                Cancelar
-            </button>
+            <button type="submit" class="btn btn-success">Guardar cambios</button>
+            <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
         }
     </div>
 </EditForm>
@@ -42,6 +36,12 @@
 {
     <div class="alert alert-info">@mensaje</div>
 }
+
+@if (!string.IsNullOrEmpty(valorRecibido))
+{
+    <div class="alert alert-secondary">Valor recibido: @valorRecibido</div>
+}
+
 
 <table class="table table-striped">
     <thead>
@@ -58,14 +58,8 @@
                 <td>@d.IdDepartamento</td>
                 <td>@d.NombreDepartamento</td>
                 <td>
-                    <button class="btn btn-warning btn-sm"
-                            @onclick="() => EditarDepartamento(d)">
-                        Editar
-                    </button>
-                    <button class="btn btn-danger btn-sm"
-                            @onclick="() => EliminarDepartamento(d.IdDepartamento)">
-                        Eliminar
-                    </button>
+                    <button class="btn btn-warning btn-sm" @onclick="() => EditarDepartamento(d)">Editar</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => EliminarDepartamento(d.IdDepartamento)">Eliminar</button>
                 </td>
             </tr>
         }
@@ -76,6 +70,7 @@
     private List<Departamento> departamentos = new();
     private Departamento nuevoDepartamento = new();
     private string mensaje = "";
+    private string valorRecibido = "";
     private bool modoEdicion = false;
 
     protected override async Task OnInitializedAsync()
@@ -90,31 +85,43 @@
 
     private async Task OnSubmit()
     {
+        valorRecibido = nuevoDepartamento.NombreDepartamento;
+        Console.WriteLine($">>> Valor recibido: {valorRecibido}");
+
         if (modoEdicion)
             await ActualizarDepartamento();
         else
             await CrearDepartamento();
     }
-     
+
+
     private async Task CrearDepartamento()
     {
-        if (string.IsNullOrWhiteSpace(nuevoDepartamento.NombreDepartamento))
+        try
         {
-            mensaje = "Debe ingresar un nombre.";
-            return;
+            if (string.IsNullOrWhiteSpace(nuevoDepartamento.NombreDepartamento))
+            {
+                mensaje = "Debe ingresar un nombre.";
+                return;
+            }
+
+            var dep = new Departamento
+            {
+                NombreDepartamento = nuevoDepartamento.NombreDepartamento
+            };
+
+            _context.Departamentos.Add(dep);
+            await _context.SaveChangesAsync();
+
+            mensaje = "Departamento creado correctamente.";
+            nuevoDepartamento = new();
+            await CargarDepartamentos();
         }
-
-        var dep = new Departamento
+        catch (Exception ex)
         {
-            NombreDepartamento = nuevoDepartamento.NombreDepartamento
-        };
-
-        _context.Departamentos.Add(dep);
-        await _context.SaveChangesAsync();
-
-        mensaje = "Departamento creado correctamente.";
-        nuevoDepartamento = new();
-        await CargarDepartamentos();
+            mensaje = $"Error al guardar: {ex.Message}";
+            Console.WriteLine($">>> Error al guardar: {ex.Message}");
+        }
     }
 
     private void EditarDepartamento(Departamento d)
@@ -129,16 +136,24 @@
 
     private async Task ActualizarDepartamento()
     {
-        var dep = await _context.Departamentos.FindAsync(nuevoDepartamento.IdDepartamento);
-        if (dep != null)
+        try
         {
-            dep.NombreDepartamento = nuevoDepartamento.NombreDepartamento;
-            await _context.SaveChangesAsync();
-            mensaje = "Departamento actualizado correctamente.";
+            var dep = await _context.Departamentos.FindAsync(nuevoDepartamento.IdDepartamento);
+            if (dep != null)
+            {
+                dep.NombreDepartamento = nuevoDepartamento.NombreDepartamento;
+                await _context.SaveChangesAsync();
+                mensaje = "Departamento actualizado correctamente.";
+            }
+            nuevoDepartamento = new();
+            modoEdicion = false;
+            await CargarDepartamentos();
         }
-        nuevoDepartamento = new();
-        modoEdicion = false;
-        await CargarDepartamentos();
+        catch (Exception ex)
+        {
+            mensaje = $"Error al actualizar: {ex.Message}";
+            Console.WriteLine($">>> Error al actualizar: {ex.Message}");
+        }
     }
 
     private void CancelarEdicion()
@@ -149,13 +164,21 @@
 
     private async Task EliminarDepartamento(int id)
     {
-        var d = await _context.Departamentos.FindAsync(id);
-        if (d != null)
+        try
         {
-            _context.Departamentos.Remove(d);
-            await _context.SaveChangesAsync();
-            mensaje = "Departamento eliminado correctamente.";
-            await CargarDepartamentos();
+            var d = await _context.Departamentos.FindAsync(id);
+            if (d != null)
+            {
+                _context.Departamentos.Remove(d);
+                await _context.SaveChangesAsync();
+                mensaje = "Departamento eliminado correctamente.";
+                await CargarDepartamentos();
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al eliminar: {ex.Message}";
+            Console.WriteLine($">>> Error al eliminar: {ex.Message}");
         }
     }
 }

@@ -10,11 +10,10 @@ namespace SeguimientosDeGraduados
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Servicios de Blazor
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
-            // Registrar el DbContext con la cadena de conexión
+            // Configuración del DbContext con cadena de conexión en appsettings.json
             builder.Services.AddDbContext<SeguimientoGraduadosContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("SeguimientoGraduados")));
 
@@ -26,7 +25,6 @@ namespace SeguimientosDeGraduados
                 app.UseHsts();
             }
 
-            app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
             app.UseHttpsRedirection();
             app.UseAntiforgery();
 
